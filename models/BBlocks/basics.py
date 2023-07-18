@@ -21,7 +21,7 @@ class InvertedResidualBlock(nn.Module):
     
 class DepthwiseSeparableConv(nn.Module):
     def __init__(self, in_channels, out_channels, kernel_size=3, stride=1, act_layer=None, norm_layer=None, drop_path_rate=None):
-        super(DepthwiseSeparableConv, self).__init__()
+        super().__init__()
 
         self.depthwise = nn.Conv2d(in_channels, in_channels, kernel_size=kernel_size, stride=stride, groups=in_channels, padding=kernel_size // 2)
         self.pointwise = nn.Conv2d(in_channels, out_channels, kernel_size=1, stride=stride)
@@ -32,22 +32,21 @@ class DepthwiseSeparableConv(nn.Module):
             self.norm = None
 
         self.act_layer = act_layer
+        
         self.drop_path_rate = drop_path_rate
 
     def forward(self, x):
+        
         x = self.depthwise(x)
         x = self.pointwise(x)
-
-        if self.norm is not None:
-            x = self.norm(x)
-
         if self.act_layer is not None:
             x = self.act_layer(x)
-
+        if self.norm is not None:
+            x = self.norm(x)
         if self.drop_path_rate > 0.0:
             x = drop_path(x, self.drop_path_rate)
-
         return x
+
 
 class AtrousConv(nn.Module):
     def __init__(self, in_channels, out_channels, kernel_size=3, stride=1, dilation=2):
@@ -77,22 +76,22 @@ class DilatedConv(nn.Module):
 
 class SqueezeAndExcitationBlock(nn.Module):
     def __init__(self, in_channels, num_outputs=None, rd_ratio=0.2):
-        super(SqueezeAndExcitationBlock, self).__init__()
+        super().__init__()
         
         if num_outputs is None:
             num_outputs = int(in_channels * (1 - rd_ratio))
         self.squeeze = nn.AdaptiveAvgPool2d(1)
         self.excitation = nn.Sequential(
-            nn.Linear(in_channels, num_outputs),
+            nn.Linear(in_channels, num_outputs, bias=False),
             nn.ReLU(inplace=True),
-            nn.Linear(num_outputs, in_channels),
+            nn.Linear(num_outputs, in_channels, bias=False),
             nn.Sigmoid()
         )
 
     def forward(self, x):
-        batch_size, channel_num, _, _ = x.size()
-        features = self.squeeze(x)
-        excitation = self.excitation(features).view(batch_size, channel_num, 1, 1)
+        b, c, _, _ = x.size()
+        features = self.squeeze(x).view(b, c)
+        excitation = self.excitation(features).view(b, c, 1, 1)
         return x * excitation
     
     

@@ -9,10 +9,8 @@ from typing import Type, Callable, Tuple, Optional, Set, List, Union
 
 import torch
 import torch.nn as nn
-import sys
-sys.path.append('/home/roberto/PythonProjects/RDetector/EasyDet/models/BBlocks')
 
-from BBlocks.basics import drop_path, trunc_normal_, Mlp, DropPath, DepthwiseSeparableConv, SqueezeAndExcitationBlock
+from models.BBlocks.basics import drop_path, trunc_normal_, Mlp, DropPath, DepthwiseSeparableConv, SqueezeAndExcitationBlock
 
 
 def window_partition(
@@ -95,7 +93,7 @@ class MBConvBlock(nn.Module):
             in_channels: int,
             out_channels: int,
             downscale: bool = False,
-            act_layer: Type[nn.Module] = nn.GELU,
+            act_layer: Type[nn.Module] = nn.GELU(),
             norm_layer: Type[nn.Module] = nn.BatchNorm2d,
             drop_path: float = 0.,
             expand_ratio: int = 4.,
@@ -103,13 +101,13 @@ class MBConvBlock(nn.Module):
     ) -> None:
         """ Constructor method """
         # Call super constructor
-        super(MBConvBlock, self).__init__()
+        super().__init__()
         # Save parameter
         self.drop_path_rate: float = drop_path
         if not downscale:
             assert in_channels == out_channels, "If downscaling is utilized input and output channels must be equal."
-        if act_layer == nn.GELU:
-            act_layer = _gelu_ignore_parameters
+        # if act_layer == nn.GELU:
+        #     act_layer = _gelu_ignore_parameters
         # Make main path
         self.main_path = nn.Sequential(
             norm_layer(in_channels),
@@ -145,9 +143,9 @@ class MBConvBlock(nn.Module):
         """
         print('input in MBConvBlock', input.shape)
         output = self.main_path(input)
-        if self.drop_path_rate > 0.:
-            output = drop_path(output, self.drop_path_rate, self.training)
-        output = output + self.skip_path(input)
+        # if self.drop_path_rate > 0.:
+        #     output = drop_path(output, self.drop_path_rate, self.training)
+        # output = output + self.skip_path(input)
         return output
 
 
